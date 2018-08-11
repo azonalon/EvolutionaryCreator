@@ -8,5 +8,5 @@ layout (std140, binding=2) uniform SharedUniforms
 
 
 void main() {
-  gl_Position = view*vec4(position, 0.0, 1.0);
+  gl_Position = view*vec4(position, 0.0, 1);
 }
