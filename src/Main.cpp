@@ -9,7 +9,9 @@
 #include "physics/CollisionObjects.hpp"
 #include "view/View.hpp"
 #include "util/LoadMesh.hpp"
+#include <Eigen/Dense>
 
+using namespace std;
 class CoordinateGridRender {
 public:
     static constexpr std::array<double, 8> coordinateData = {-1, -1, -1, 1, 1, 1, 1, -1};
@@ -45,13 +47,13 @@ public:
 
 class ElasticModelRender {
 public:
-    ElasticModel& m;
+    ElasticModel* m;
     ShaderProgram ems;
     ShaderProgram bbs;
     const unsigned restartIndex = 65535;
     bool drawBoundingBoxes=true;
     GLuint vertexBuffer, indexBuffer, vao;
-    ElasticModelRender(ElasticModel& m, ShaderContext& context): m(m),
+    ElasticModelRender(ElasticModel* m, ShaderContext& context): m(m),
         ems(
             "resources/shaders/ElasticMesh.vert",
             "resources/shaders/ElasticMesh.geom",
@@ -72,29 +74,29 @@ public:
         glBindVertexArray(vao);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-        glBufferData(GL_ARRAY_BUFFER, m.vertexCount()*sizeof(double)*2, m.x2.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, m->vertexCount()*sizeof(double)*2, m->x2.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m.triangleCount()*sizeof(unsigned int)*3,
-            m.Te.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m->triangleCount()*sizeof(unsigned int)*3,
+            m->Te.data(), GL_STATIC_DRAW);
         glBindVertexArray(0);
     }
     void draw() {
         ems.enable();
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, m.vertexCount()*sizeof(double)*2, m.x2.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, m->vertexCount()*sizeof(double)*2, m->x2.data());
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-        glDrawElements(GL_TRIANGLES, 3*m.triangleCount(), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, 3*m->triangleCount(), GL_UNSIGNED_INT, nullptr);
         if(drawBoundingBoxes) {
             // glEnable(GL_PRIMITIVE_RESTART);
             bbs.enable();
             // glPrimitiveRestartIndex(restartIndex);
             std::vector<double> coords;
-            // std::vector<std::array<unsigned int, 4>> indices(m.collisionObjects.size());
+            // std::vector<std::array<unsigned int, 4>> indices(m->collisionObjects.size());
             unsigned i=0;
-            for(auto& c: m.collisionObjects) {
+            for(auto& c: m->collisionObjects) {
                 auto& b = c->boundingBox();
                 coords.insert(coords.end(), {b.x0, b.y0, b.x0, b.y1, b.x1, b.y1, b.x1, b.y0});
                 // indices.push_back({i, i+1, i+2, i+3, restartIndex});
@@ -105,7 +107,8 @@ public:
             glGenBuffers(1, &vb);
             // glGenBuffers(1, &ib);
             glBindBuffer(GL_ARRAY_BUFFER, vb);
-            glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(double), &coords[0], GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, 
+                         coords.size()*sizeof(double), &coords[0], GL_STATIC_DRAW);
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
             // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
@@ -121,7 +124,7 @@ public:
     }
 };
 
-ElasticModel selfCollisionTest() {
+ElasticModel* selfCollisionTest() {
     double mu = 5;
     double lambda =  5;
     const std::vector<double> vertices =  {
@@ -132,39 +135,48 @@ ElasticModel selfCollisionTest() {
     const std::vector<double> nu(2, lambda);
     const std::vector<double> M =  {1,1,1,1,1,1};
     const std::vector<std::array<unsigned,3>>indices =  {{0,1,2}, {3,4,5}};
-    ElasticModel::ElasticModelType modelType = ElasticModel::ElasticModelType::INVERTIBLE_NEOHOOKEAN;
-    ElasticModel em(vertices, indices, k, nu, M, modelType, (double)0.3);
+    ElasticModel::ElasticModelType modelType = ElasticModel::ElasticModelType::NEOHOOKEAN;
+    ElasticModel* em = new ElasticModel(vertices, indices, k, nu, M, modelType, (double)0.3);
     for(int i=0; i<6; i++) {
-        em.x1(6+i) += 0.1;
+        em->x1(6+i) += 0.1;
     }
-    em.kDamp = 0.1;
-    em.dt = 0.01;
+    em->kDamp = 1;
+    em->dt = 0.01;
     return em;
 };
 
-ElasticModel ballTest() {
-    double nuV = 0.49;
-    double kV =  10.0;
+ElasticModel* ballTest() {
+    double mu = 1;
+    double lambda =  1;
     std::vector<double> vertices;
     std::vector<std::array<unsigned,3>>indices;
     loadMesh2D("resources/meshes/ball.obj", vertices, indices, 0, 4);
-    const std::vector<double> k(indices.size(), kV);
-    const std::vector<double> nu(indices.size(), nuV);
+    const std::vector<double> k(indices.size(), mu);
+    const std::vector<double> nu(indices.size(), lambda);
     const std::vector<double> M(vertices.size(), 1.0);
-    ElasticModel::ElasticModelType modelType = ElasticModel::ElasticModelType::INVERTIBLE_NEOHOOKEAN;
-    ElasticModel em(vertices, indices, k, nu, M, modelType, (double)0.3);
-    for(int i=0; i<6; i++) {
-        // em.x1(6+i) += 0.1;
-    }
+    ElasticModel::ElasticModelType modelType = ElasticModel::ElasticModelType::STABLE_NEOHOOKEAN;
+    ElasticModel* em = new ElasticModel(vertices, indices, k, nu, M, modelType, (double)0.3);
+    em->x0 = Eigen::ArrayXd::Random(em->x0.size())/2.0 + 2;
+    em->x1 = em->x0;
+    em->x2 = em->x0;
+    // em->v = Eigen::ArrayXd::Random(em->x0.size())/2.0 + 2;
+    std::cout << "Initial positions: {";
+    for(int i=0; i< em->x0.size(); i++)
+        cout << vertices[i] << ", ";
+    std::cout << "}" << std::endl;
+    // std::cout << "Random positions: {";
+    for(int i=0; i< em->x0.size(); i++)
+        cout << em->x0[i] << ", ";
+    // std::cout << "}" << std::endl;
     // std::cout << em.x0 << std::endl;
-    for(unsigned i=1; i<em.fExt.size(); i+=2)
-        em.fExt[i] = -0.5;
-    for(unsigned i=0; i<em.fExt.size(); i+=2)
-        em.fExt[i] = -0.2;
+    for(unsigned i=1; i<em->fExt.size(); i+=2)
+        em->fExt[i] = -0.2;
+    for(unsigned i=0; i<em->fExt.size(); i+=2)
+        em->fExt[i] = -0.0;
     auto r = new Rectangle(10,1);
-    em.collisionObjects.push_back(r);
-    em.kDamp = 0.1;
-    em.dt = 0.01;
+    em->collisionObjects.push_back(r);
+    em->kDamp = 0.5;
+    em->dt = 0.01;
     return em;
 };
 
@@ -242,26 +254,43 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
-    bool show_demo_window = false;
-    bool show_another_window = false;
+    bool stepping = false;
     ImVec4 clear_color = ImVec4(0.00f, 0.f, 0.f, 1.00f);
 
 
 
 
-    ElasticModel em = ballTest();
+    srand(0);
+    ElasticModel* em = ballTest();
     ShaderContext context;
     ElasticModelRender emr(em, context);
     CoordinateGridRender cgr(context, 1.0);
     View view(window);
 
+    std::vector<std::pair<Eigen::ArrayXf, double>> lines;
+    em->lineSearchHook = [&](auto* s, double alpha) {
+        unsigned N = 300;
+        Eigen::ArrayXf values(N);
+        s->g = 0;
+        Eigen::ArrayXd x(s->x0);
+        auto alphas = Eigen::ArrayXd::LinSpaced(N, 0, 2);
+        for(unsigned i=0; i<N; i++) {
+            x = s->x0 + alphas[i]*s->dn;
+            values(i) = s->computeOptimizeGradient(x, s->g);
+        }
+        lines.push_back(make_pair(values, alpha));
+    };
+    double t=0;
+
     // Main loop
+    float mu = em->mu[0];
+    float lambda = em->lambda[0];
     while (!glfwWindowShouldClose(window))
     {
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
         // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
+        // - When io.WantCaptureKut data to your main application.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
 
@@ -273,46 +302,71 @@ int main(int, char**)
         // 1. Show a simple window.
         // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
         {
-            static float f = 0.0f;
-            static int counter = 0;
-            ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+            // static float f = 0.0f;
+            // static int counter = 0;
+            ImGui::Text("Stepper interface");                           // Display some text (you can use a format string too)
+            ImGui::Checkbox("Continue stepping", &stepping);
 
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+            ImGui::SliderFloat("mu", &mu, 0, 10);
+            ImGui::SliderFloat("lambda", &lambda, 0, 10);
+            if(em->mu[0] != mu) {
+                for(auto& x: em->mu) x = mu;
+            }
+            if(em->lambda[0] != lambda) {
+                for(auto& x: em->lambda) x = lambda;
+            }
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-                counter++;
+            if (ImGui::Button("One step")) {
+                lines.clear();
+                em->implicitEulerStep();
+                t += em->dt;
+            }
+            if (ImGui::Button("Reset")) {
+                delete em;
+                em = ballTest();
+                emr.m = em;
+                t=0;
+            }
             ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            ImGui::Text("t = %g", t);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        }
 
-        // 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
+            // ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, "avg 0.0", -1.0f, 1.0f, ImVec2(0,80));
+            // ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0,80));
 
-        // 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
-        if (show_demo_window)
-        {
-            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-            ImGui::ShowDemoWindow(&show_demo_window);
+            // struct Funcs
+            // {
+            //     static float Sin(double i) { return sinf(i); }
+            //     static float Saw(double i) { return (int(i)); }
+            // };
+            static int func_type = 0, display_count = 70;
+            ImGui::Separator();
+            ImGui::PushItemWidth(100); ImGui::Combo("func", &func_type, "Sin\0Saw\0"); ImGui::PopItemWidth();
+            ImGui::SameLine();
+            ImGui::SliderInt("Sample count", &display_count, 1, 400);
+            // Eigen::ArrayXf X = Eigen::ArrayXf::LinSpaced(display_count, 0, 10);
+            // X = X.unaryExpr(func_type == 0? &Funcs::Sin: Funcs::Saw);
+            for(auto& p: lines) {
+                char s[30];
+                sprintf(s, "alpha=%g", p.second);
+                ImGui::PlotLines("Lines", &(p.first)[0], p.first.size(), 0, s, FLT_MAX, FLT_MAX, ImVec2(400,200));
+            }
+            ImGui::Separator();
+
         }
 
         // Rendering
         ImGui::Render();
+
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        em.implicitEulerStep();
+        if(stepping) {
+            lines.clear();
+            em->implicitEulerStep();
+            t += em->dt;
+        }
         context.setViewMatrix(view.computeViewMatrix());
         cgr.draw();
         emr.draw();
@@ -324,6 +378,7 @@ int main(int, char**)
     }
 
     // Cleanup
+    delete em;
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
