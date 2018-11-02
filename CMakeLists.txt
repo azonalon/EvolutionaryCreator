@@ -1,6 +1,6 @@
 project(EvolutionaryCreator)
 cmake_minimum_required (VERSION 3.1)
-set(CMAKE_BUILD_TYPE Release)
+# set(CMAKE_BUILD_TYPE Release)
 # set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 # set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG -Wall -Wno-unused-function -Wno-int-in-bool-context -Wno-class-memaccess")
