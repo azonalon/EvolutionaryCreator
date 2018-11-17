@@ -141,10 +141,10 @@ ElasticModel *ballTest() {
       ElasticModel::ElasticModelType::STABLE_NEOHOOKEAN;
   ElasticModel *em =
       new ElasticModel(vertices, indices, k, nu, M, modelType, (double)0.3);
-  em->x0 = Eigen::ArrayXd::Random(em->x0.size()) / 2.0 + 2;
+  // em->x0 = Eigen::ArrayXd::Random(em->x0.size()) / 2.0 + 2;
   // em->x0 = em->x0 + 5;
-  em->x1 = em->x0;
-  em->x2 = em->x0;
+  // em->x1 = em->x0;
+  // em->x2 = em->x0;
   // em->v = Eigen::ArrayXd::Random(em->x0.size())/2.0 + 2;
   // std::cout << "Initial positions: {";
   // for (int i = 0; i < em->x0.size(); i++) cout << vertices[i] << ", ";
@@ -159,13 +159,13 @@ ElasticModel *ballTest() {
   auto r1 = new Rectangle(15, 1);
   // r->aux = r->aux.rotate(1).translate(Eigen::Vector2d(0.0, 0.0));
   r->rotate(M_PI/4);
-  r->translate(0, -2);
+  r->translate(0, -3);
   r1->rotate(-M_PI/4);
-  r1->translate(0, -2);
+  r1->translate(0, -3);
   em->collisionObjects.push_back(r);
   em->collisionObjects.push_back(r1);
   em->kDamp = 0.3;
-  em->dt = 0.1;
+  em->dt = 0.01;
   return em;
 };
 
@@ -302,8 +302,8 @@ int main(int, char **) {
       ImGui::SliderInt("Random Seed", &seed, 0, 100);
       srand(seed);
 
-      ImGui::SliderFloat("mu", &mu, 0, 50);
-      ImGui::SliderFloat("lambda", &lambda, 0, 50);
+      ImGui::SliderFloat("mu", &mu, 0, 100);
+      ImGui::SliderFloat("lambda", &lambda, 0, 100);
       if (em->mu[0] != mu) {
         for (auto &x : em->mu) x = mu;
       }
@@ -373,7 +373,7 @@ int main(int, char **) {
       }
     }
     context.setViewMatrix(view.computeViewMatrix());
-    cgr.draw();
+    // cgr.draw();
     emr.draw();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
