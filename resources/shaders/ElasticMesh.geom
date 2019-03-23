@@ -3,6 +3,13 @@ layout(triangles) in;
 layout(triangle_strip, max_vertices=3) out;
 // uniform mat4 viewMatrix; // GeeXLab auto uniform
 // uniform vec2 WIN_SCALE;
+in VertexData {
+    vec2 texCoord;
+} VertexIn[3];
+ 
+out VertexData {
+    vec2 texCoord;
+} VertexOut;
 
 out vec3 dist;
 
@@ -51,6 +58,7 @@ void main()
   dist *= p0_3d.w;
 
   gl_Position = p0_3d;
+  VertexOut.texCoord = VertexIn[0].texCoord;
   EmitVertex();
 
 
@@ -74,6 +82,7 @@ void main()
   dist *= p1_3d.w;
 
   gl_Position = p1_3d;
+  VertexOut.texCoord = VertexIn[1].texCoord;
   EmitVertex();
 
 
@@ -96,6 +105,7 @@ void main()
   dist *= p2_3d.w;
 
   gl_Position = p2_3d;
+  VertexOut.texCoord = VertexIn[2].texCoord;
   EmitVertex();
 
   //--------------------------------

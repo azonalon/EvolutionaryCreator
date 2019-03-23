@@ -5,8 +5,8 @@ in vec3 dist;
 out vec4 FragColor;
 void main()
 {
-  vec4 WIRE_COL = vec4(1, 0, 0, 1);
-  vec4 FILL_COL = vec4(0, 0, 0, 0);
+  vec4 WIRE_COL = vec4(1, 1, 1, 1);
+  vec4 FILL_COL = vec4(0, 0, 0, 1);
   // Undo perspective correction.
   //vec3 dist_vec = dist * gl_FragCoord.w;
 

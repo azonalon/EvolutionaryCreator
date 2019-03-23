@@ -3,10 +3,12 @@
 // uniform vec3 FILL_COL;
 in vec3 dist;
 out vec4 FragColor;
+uniform sampler2D Tex;
+in VertexData {
+    vec2 texCoord;
+} VertexIn;
 void main()
 {
-  vec3 WIRE_COL = vec3(1, 0, 0);
-  vec3 FILL_COL = vec3(0, 0, 1);
   // Undo perspective correction.
   //vec3 dist_vec = dist * gl_FragCoord.w;
 
@@ -18,7 +20,13 @@ void main()
 
   // Compute line intensity and then fragment color
   float I = exp2(-100.0*d);
+  // float I = 1;
 
+  vec4 texColor = texture(Tex, VertexIn.texCoord);
+  vec3 WIRE_COL = vec3(0.1, 0.1, 0.1);
+  // vec3 FILL_COL = vec3(0.5, 0.5, 0.8);
+  vec3 FILL_COL = texColor.rgb;
   FragColor.rgb = I*WIRE_COL + (1.0 - I)*FILL_COL;
-  FragColor.a = 1.0;
+  FragColor.a = texColor.a;
+  FragColor.a = 1;
 }
