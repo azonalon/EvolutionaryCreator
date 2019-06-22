@@ -5,10 +5,12 @@ layout(triangle_strip, max_vertices=3) out;
 // uniform vec2 WIN_SCALE;
 in VertexData {
     vec2 texCoord;
+    vec4 vertexColor;
 } VertexIn[3];
  
 out VertexData {
     vec2 texCoord;
+    vec4 vertexColor;
 } VertexOut;
 
 out vec3 dist;
@@ -59,6 +61,7 @@ void main()
 
   gl_Position = p0_3d;
   VertexOut.texCoord = VertexIn[0].texCoord;
+  VertexOut.vertexColor = VertexIn[0].vertexColor;
   EmitVertex();
 
 
@@ -83,6 +86,7 @@ void main()
 
   gl_Position = p1_3d;
   VertexOut.texCoord = VertexIn[1].texCoord;
+  VertexOut.vertexColor = VertexIn[1].vertexColor;
   EmitVertex();
 
 
@@ -106,6 +110,7 @@ void main()
 
   gl_Position = p2_3d;
   VertexOut.texCoord = VertexIn[2].texCoord;
+  VertexOut.vertexColor = VertexIn[2].vertexColor;
   EmitVertex();
 
   //--------------------------------

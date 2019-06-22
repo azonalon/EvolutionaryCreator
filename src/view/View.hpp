@@ -1,3 +1,4 @@
+#pragma once
 #include <GLFW/glfw3.h>
 #include "imgui/imgui.h"
 #include <functional>
@@ -5,14 +6,15 @@
 
 class View {
 
+
+public:
     double zoom=1, aspect=1;
     double x0=0, y0=0, x1=0, y1=0, xC=0, yC=0;
     bool dragging = false;
     glm::mat4 viewMatrix;
     GLFWwindow* window;
-public:
-
-    View(GLFWwindow* w): window(w) {
+    void setWindow(GLFWwindow* w) {
+        window = w;
         installCallbacks(window);
     }
 

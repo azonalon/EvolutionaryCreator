@@ -1,7 +1,0 @@
--I./dependencies
--I./dependencies/Evolutionary/include
--I./dependencies/Evolutionary/dependencies
--I./dependencies/imgui
--I./dependencies/imgui/examples
--I./src
--std=c++17

@@ -9,7 +9,7 @@ class CoordinateGridRender {
  public:
   static constexpr std::array<double, 8> coordinateData = {-1, -1, -1, 1,
                                                            1,  1,  1, -1};
-  double scale = 10;
+  double scale = 1;
   double spacing = 1;
   GLuint buffer, vao;
   ShaderProgram cgs;
@@ -21,9 +21,9 @@ class CoordinateGridRender {
     glBindVertexArray(vao);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
     glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(double), &coordinateData[0],
                  GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
     glBindVertexArray(0);
   };
   void draw() {
@@ -42,7 +42,7 @@ class ElasticModelRender {
   ShaderProgram bbs;
   const unsigned restartIndex = 65535;
   bool drawBoundingBoxes = true;
-  GLuint vertexBuffer, indexBuffer, uvBuffer, vao, vaoBoundingBox;
+  GLuint vertexBuffer, indexBuffer, uvBuffer, vao, vaoBoundingBox, sBuffer;
   ElasticModelRender(ElasticModel *m, ShaderContext &context,
                      const unsigned char *texPixels, unsigned texWidth,
                      unsigned texHeight, const double* texCoords)
@@ -56,6 +56,7 @@ class ElasticModelRender {
     glGenBuffers(1, &vertexBuffer);
     glGenBuffers(1, &indexBuffer);
     glGenBuffers(1, &uvBuffer);
+    glGenBuffers(1, &sBuffer);
     glGenVertexArrays(1, &vao);
     glGenVertexArrays(1, &vaoBoundingBox);
 
@@ -82,6 +83,11 @@ class ElasticModelRender {
     glBufferData(GL_ARRAY_BUFFER, m->vertexCount() * sizeof(double) * 2,
                  texCoords, GL_STATIC_DRAW);
     glVertexAttribPointer(1, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, sBuffer);
+    glBufferData(GL_ARRAY_BUFFER, m->vertexCount() * sizeof(double) * 1,
+                 texCoords, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(1, 1, GL_DOUBLE, GL_FALSE, 0, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                  m->triangleCount() * sizeof(unsigned int) * 3, m->Te.data(),
@@ -96,11 +102,27 @@ class ElasticModelRender {
     glBufferSubData(GL_ARRAY_BUFFER, 0, m->vertexCount() * sizeof(double) * 2,
                     m->x2.data());
     glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+    // vertex coordinates
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
     glVertexAttribPointer(1, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+    // uv coordinates for textures
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    // stretch factors
+    std::vector<double> sVertexValues(m->vertexCount(), 0.0);
+    for(unsigned i=0; i<m->Te.rows(); i++) {
+      // auto& triangle = m->Te[i];
+      sVertexValues[m->Te(i ,0)] += m->S[i]/3.0;
+      sVertexValues[m->Te(i ,1)] += m->S[i]/3.0;
+      sVertexValues[m->Te(i ,2)] += m->S[i]/3.0;
+    }
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, sBuffer);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, m->vertexCount() * sizeof(double),
+                    sVertexValues.data());
+    glVertexAttribPointer(1, 1, GL_DOUBLE, GL_FALSE, 0, 0);
+
     glDrawElements(GL_TRIANGLES, 3 * m->triangleCount(), GL_UNSIGNED_INT,
                    nullptr);
     // TODO: enable

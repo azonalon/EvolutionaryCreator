@@ -6,6 +6,7 @@ out vec4 FragColor;
 uniform sampler2D Tex;
 in VertexData {
     vec2 texCoord;
+    vec4 vertexColor;
 } VertexIn;
 void main()
 {
@@ -26,6 +27,7 @@ void main()
   vec3 WIRE_COL = vec3(0.1, 0.1, 0.1);
   // vec3 FILL_COL = vec3(0.5, 0.5, 0.8);
   vec3 FILL_COL = texColor.rgb;
+  // vec3 FILL_COL = VertexIn.vertexColor.rgb;
   FragColor.rgb = I*WIRE_COL + (1.0 - I)*FILL_COL;
   FragColor.a = texColor.a;
   FragColor.a = 1;
