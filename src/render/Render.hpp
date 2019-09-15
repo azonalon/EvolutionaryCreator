@@ -40,9 +40,11 @@ class ElasticModelRender {
   ElasticModel *m;
   ShaderProgram ems;
   ShaderProgram bbs;
+  ShaderProgram fws;
   const unsigned restartIndex = 65535;
   bool drawBoundingBoxes = true;
-  GLuint vertexBuffer, indexBuffer, uvBuffer, vao, vaoBoundingBox, sBuffer;
+  bool drawForceVectors = true;
+  GLuint vertexBuffer, indexBuffer, uvBuffer, vao, vaoBoundingBox, sBuffer, forceBuffer, vaoForces;
   ElasticModelRender(ElasticModel *m, ShaderContext &context,
                      const unsigned char *texPixels, unsigned texWidth,
                      unsigned texHeight, const double* texCoords)
@@ -52,12 +54,18 @@ class ElasticModelRender {
             "resources/shaders/ElasticMesh.frag", context),
         bbs("resources/shaders/BoundingBox.vert",
             "resources/shaders/BoundingBox.geom",
-            "resources/shaders/BoundingBox.frag", context) {
+            "resources/shaders/BoundingBox.frag", context),
+        fws("resources/shaders/Flow.vert",
+            "",
+            "resources/shaders/Flow.frag", context) 
+            {
     glGenBuffers(1, &vertexBuffer);
     glGenBuffers(1, &indexBuffer);
     glGenBuffers(1, &uvBuffer);
     glGenBuffers(1, &sBuffer);
+    glGenBuffers(1, &forceBuffer);
     glGenVertexArrays(1, &vao);
+    glGenVertexArrays(1, &vaoForces);
     glGenVertexArrays(1, &vaoBoundingBox);
 
     // LOAD TEXTURE INTO PIPELINE
@@ -92,6 +100,17 @@ class ElasticModelRender {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                  m->triangleCount() * sizeof(unsigned int) * 3, m->Te.data(),
                  GL_STATIC_DRAW);
+
+    glBindVertexArray(vaoForces);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, forceBuffer);
+    glBufferData(GL_ARRAY_BUFFER, m->vertexCount() * sizeof(double) * 2,
+                 m->g.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+
     glBindVertexArray(0);
   }
   void draw() {
@@ -122,10 +141,24 @@ class ElasticModelRender {
     glBufferSubData(GL_ARRAY_BUFFER, 0, m->vertexCount() * sizeof(double),
                     sVertexValues.data());
     glVertexAttribPointer(1, 1, GL_DOUBLE, GL_FALSE, 0, 0);
-
     glDrawElements(GL_TRIANGLES, 3 * m->triangleCount(), GL_UNSIGNED_INT,
                    nullptr);
     // TODO: enable
+
+    if (drawForceVectors) {
+      fws.enable();
+      glBindVertexArray(vaoForces);
+      glEnableVertexAttribArray(0);
+      glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+      glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(1);
+      glBindBuffer(GL_ARRAY_BUFFER, forceBuffer);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, m->vertexCount() * sizeof(double) * 2,
+                      m->modelForces.data());
+      glVertexAttribPointer(1, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+      glDrawArrays(GL_POINTS, 0, m->vertexCount());
+    }
+
     if (drawBoundingBoxes) {
       glBindVertexArray(vaoBoundingBox);
       bbs.enable();

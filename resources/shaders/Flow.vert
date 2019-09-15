@@ -14,11 +14,11 @@ out vec2 rotation;
 out float v_size;
 
 void main(void) {
-  size =20 * length(uv)*view[0][0];
+  size =200 * length(uv)*view[0][0];
   linewidth = size/10;
   antialias = 1;
-  fg_color = vec4(0,0,0,0.5);
-  bg_color = vec4(0,0,1,0.5);
+  fg_color = vec4(1,1,1,1);
+  bg_color = vec4(.9,.9,.9,1);
   gl_Position = view * vec4(position, 0, 1.0);
   v_size = SQRT_2 * size + 2.0 * (linewidth + 1.5 * antialias);
   gl_PointSize = v_size;

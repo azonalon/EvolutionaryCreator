@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include "render/OpenGLContext.hpp"
 #include "imgui/imgui.h"
 #include "render/Render.hpp"
@@ -7,26 +7,25 @@
 #include "stb/stb_image.h"
 #include "physics/CollisionObjects.hpp"
 #include "physics/ElasticModel.hpp"
-#include "physics/Phonons.hpp"
 #include "shader/ShaderProgram.hpp"
 #include "util/LoadMesh.hpp"
 #include "view/View.hpp"
 
 using namespace std;
 
-ElasticModelRender *fourierTestEmr(Phonons* ph, ShaderContext& context) {
+ElasticModelRender *constructElasticModelRender(ElasticModel* model, ShaderContext& context) {
   int width, height, nrChannels;
   unsigned char *data = stbi_load("resources/textures/worldmap.png", &width,
                                   &height, &nrChannels, 4);
-  Eigen::ArrayXd uv = ph->model->x0;
+  Eigen::ArrayXd uv = model->x0;
   uv = uv / uv.maxCoeff();
   // std::cout << uv << std::endl;
   ElasticModelRender *emr =
-      new ElasticModelRender(ph->model, context, data, width, height, &uv[0]);
+      new ElasticModelRender(model, context, data, width, height, &uv[0]);
   return emr;
 }
 
-Phonons *fourierTest() {
+ElasticModel* rectangularModel() {
   double mu = 10;
   double lambda = 10;
   unsigned N1=3, N2=3;
@@ -49,10 +48,14 @@ Phonons *fourierTest() {
       ElasticModel::ElasticModelType::STABLE_NEOHOOKEAN;
   ElasticModel *em =
       new ElasticModel(vertices, indices, k, nu, M, modelType, (double)0.3);
-  Phonons* ph = new Phonons(em, 0, N1, N2);
+  em->x1 = em->x0 + 0.5;
+  for(int i=0; i<em->v.size(); i+=2)
+  {
+    em->v[i] = 1;
+  }
   em->kDamp = 0.0;
   em->dt = 0.01;
-  return ph;
+  return em;
 };
 
 int main(int, char **) {
@@ -63,32 +66,34 @@ int main(int, char **) {
   int seed=59;
 
   srand(seed);
-  Phonons *ph = fourierTest();
-  ElasticModel* em = ph->model;
+  ElasticModel* em = rectangularModel();
   ShaderContext context;
-  ElasticModelRender* emr = fourierTestEmr(ph, context);
+  ElasticModelRender* emr = constructElasticModelRender(em, context);
   CoordinateGridRender cgr(context, 1.0);
 
   std::vector<std::pair<Eigen::ArrayXf, double>> lines;
-  em->lineSearchHook = [&](auto *s, double alpha) {
-    unsigned N = 300;
-    Eigen::ArrayXf values(N);
-    s->g = 0;
-    Eigen::ArrayXd x(s->x0);
-    auto alphas = Eigen::ArrayXd::LinSpaced(N, 0, 2);
-    for (unsigned i = 0; i < N; i++) {
-      x = s->x0 + alphas[i] * s->dn;
-      values(i) = s->computeOptimizeGradient(x, s->g);
-    }
-    lines.push_back(make_pair(values, alpha));
-  };
+  // em->lineSearchHook = [&](auto *s, double alpha) {
+  //   unsigned N = 300;
+  //   Eigen::ArrayXf values(N);
+  //   Eigen::ArrayXd vOld = s->v;
+  //   Eigen::ArrayXd x(s->x0);
+  //   auto alphas = Eigen::ArrayXd::LinSpaced(N, 0, 2);
+  //   for (unsigned i = 0; i < N; i++) {
+  //     x = s->x0 + alphas[i] * s->dn;
+  //     s->g = 0;
+  //     values(i) = s->computeOptimizeGradient(x, s->g);
+  //   }
+  //   lines.push_back(make_pair(values, alpha));
+  //   s->v = vOld;
+  // };
   double t = 0;
 
   // Main loop
-  float mu = 30;//em->mu[0];
-  float lambda = 30;//em->lambda[0];
-  float kFluid = 0.5;//em->kFluid;
+  float mu = 1;//em->mu[0];
+  float lambda = 1;//em->lambda[0];
+  float kFluid = 5;//em->kFluid;
   float kDamp = 0.05;//em->kDamp;
+  float fExt = 0.1;
   do  {
     {
       ImGui::Text("Stepper interface");  // Display some text (you can use a
@@ -97,10 +102,11 @@ int main(int, char **) {
       ImGui::SliderInt("Random Seed", &seed, 0, 100);
       srand(seed);
 
-      ImGui::SliderFloat("mu", &mu, 0, 100);
-      ImGui::SliderFloat("k Fluid", &kFluid, 0, 2);
-      ImGui::SliderFloat("lambda", &lambda, 0, 100);
+      ImGui::SliderFloat("mu", &mu, 0, 800);
+      ImGui::SliderFloat("k Fluid", &kFluid, 0, 10);
+      ImGui::SliderFloat("lambda", &lambda, 0, 800);
       ImGui::SliderFloat("k internal damping", &kDamp, 0, 2);
+      ImGui::SliderFloat("gravity", &fExt, -2, 2);
       if (em->mu[0] != mu) {
         for (auto &x : em->mu) x = mu;
       }
@@ -109,6 +115,7 @@ int main(int, char **) {
       }
       em->kFluid = kFluid;
       em->kDamp = kDamp;
+      for(int i=1; i<em->fExt.size(); i+=2) em->fExt[i] = fExt;
 
       if (ImGui::Button("One step")) {
         lines.clear();
@@ -117,8 +124,7 @@ int main(int, char **) {
       }
       if (ImGui::Button("Reset")) {
         // delete em;
-        ph = fourierTest();
-        em = ph->model;
+        em = rectangularModel();
         emr->m = em;
         t = 0;
       }
@@ -150,7 +156,7 @@ int main(int, char **) {
     if (stepping) {
       lines.clear();
       try {
-        ph->update(t);
+        // ph->update(t);
         em->implicitEulerStep();
         t += em->dt;
       } catch(const std::runtime_error& e) {
