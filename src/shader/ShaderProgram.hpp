@@ -7,23 +7,28 @@
 #include <algorithm>
 #include "util/StringFormat.hpp"
 #include <glm/glm.hpp>
+#include "render/OpenGLContext.hpp"
 
 class ShaderContext {
 public:
     GLuint uniformBuffer;
-    void setViewMatrix(glm::mat4 m) {
-        // glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, &m[0][0]);
-        glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &m[0][0]);
-    }
+    glm::mat4 viewMatrix;
+
     ShaderContext() {
         glGenBuffers(1, &uniformBuffer);
         glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), NULL, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
         glBindBufferBase(GL_UNIFORM_BUFFER, 2, uniformBuffer);
-
     }
+
+    void setViewMatrix(glm::mat4 m) {
+        // glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, &m[0][0]);
+        viewMatrix = m;
+        glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &m[0][0]);
+    };
+
 };
 
 class ShaderProgram {
@@ -97,9 +102,6 @@ public:
             glDeleteShader(vertex);
             glDeleteShader(fragment);
 
-            // Use the infoLog as you see fit.
-
-            // In this simple program, we'll just leave
             return;
         }
 

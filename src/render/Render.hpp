@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <Eigen/Dense>
+#include "imgui/imgui.h"
 #include "shader/ShaderProgram.hpp"
 #include "physics/ElasticModel.hpp"
 
@@ -41,9 +42,10 @@ class ElasticModelRender {
   ShaderProgram ems;
   ShaderProgram bbs;
   ShaderProgram fws;
+  ShaderContext& context;
   const unsigned restartIndex = 65535;
   bool drawBoundingBoxes = true;
-  bool drawForceVectors = true;
+  bool drawForceVectors = false;
   GLuint vertexBuffer, indexBuffer, uvBuffer, vao, vaoBoundingBox, sBuffer, forceBuffer, vaoForces;
   ElasticModelRender(ElasticModel *m, ShaderContext &context,
                      const unsigned char *texPixels, unsigned texWidth,
@@ -57,7 +59,7 @@ class ElasticModelRender {
             "resources/shaders/BoundingBox.frag", context),
         fws("resources/shaders/Flow.vert",
             "",
-            "resources/shaders/Flow.frag", context) 
+            "resources/shaders/Flow.frag", context) , context(context)
             {
     glGenBuffers(1, &vertexBuffer);
     glGenBuffers(1, &indexBuffer);
@@ -113,6 +115,24 @@ class ElasticModelRender {
 
     glBindVertexArray(0);
   }
+
+  void drawIndices(ShaderContext& context, OpenGLContext& contextGL) {
+    for(unsigned i=0; i<m->x0.size()/2; i++) {
+      ImDrawList* drawList = ImGui::GetOverlayDrawList();
+      drawList->AddRect(ImVec2(0,0), ImVec2(20,20), IM_COL32(255, 255, 0, 120));
+      glm::vec4 v(m->x0[2*i], m->x0[2*i+1], 0, 1);
+      double w = contextGL.view.w;
+      double h = contextGL.view.h;
+      v = context.viewMatrix*v;
+      std::stringstream s;
+      s << i;
+      drawList->AddText(ImVec2((1+v.x)*w/2, (1-v.y)*h/2), 
+                                IM_COL32(255, 0, 255, 255), s.str().c_str());
+      // drawList->AddText(ImVec2(v.x,v.y), 
+      //                           IM_COL32(255, 255, 0, 120), "A");
+    }
+  }
+
   void draw() {
     ems.enable();
     glBindTexture(GL_TEXTURE_2D, texture);

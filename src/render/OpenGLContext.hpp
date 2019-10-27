@@ -14,6 +14,5 @@ public:
     bool nextFrame();
     void destroy();
     OpenGLContext() {
-
     };
 };

@@ -28,19 +28,10 @@ ElasticModelRender *constructElasticModelRender(ElasticModel* model, ShaderConte
 ElasticModel* rectangularModel() {
   double mu = 10;
   double lambda = 10;
-  unsigned N1=3, N2=3;
+  unsigned N1=10, N2=10;
   std::vector<double> vertices;
   std::vector<std::array<unsigned, 3>> indices;
-  for(unsigned i=0; i<N2; i++) {
-    for(unsigned j=0; j<N1; j++) {
-      vertices.push_back(j);
-      vertices.push_back(i);
-      if(i<N2-1 && j < N1-1) {
-        indices.push_back({i*N1 + j, i*N1 + j+1  , (i+1)*N1 + j + 1});
-        indices.push_back({i*N1 + j, (i+1)*N1 + j, (i+1)*N1 + j + 1});
-      } 
-    }
-  }
+  loadMesh2D("resources/meshes/ramp.obj", vertices, indices, 0, 0);
   const std::vector<double> k(indices.size(), mu);
   const std::vector<double> nu(indices.size(), lambda);
   const std::vector<double> M(vertices.size(), 0.1);
@@ -49,35 +40,63 @@ ElasticModel* rectangularModel() {
   ElasticModel *em =
       new ElasticModel(vertices, indices, k, nu, M, modelType, (double)0.3);
   em->x1 = em->x0 + 0.5;
+  CollisionObject* rect = new Rectangle(200, 1);
+  rect->translate(0, -1);
+  em->collisionObjects.push_back(rect);
   for(int i=0; i<em->v.size(); i+=2)
   {
-    em->v[i] = 1;
+    em->v[i] = 0;
   }
   em->kDamp = 0.0;
-  em->dt = 0.01;
+  em->dt = 0.1;
   return em;
 };
+void printCursorPos(OpenGLContext context) {
+  ImVec2 pos = ImGui::GetMousePos();
+  double w = context.view.w;
+  double h = context.view.h;
+  glm::vec4 v((-1+2*pos.x/w), (1-2*pos.y/h), 0, 1);
+  v = glm::inverse(context.view.shaderContext->viewMatrix)*v;
+  // drawList->AddText(ImVec2((1+v.x)*w/2, (1-v.y)*h/2), 
+  //                           IM_COL32(255, 0, 255, 255), s.str().c_str());
+  ImGui::Text("Cursor position: %g, %g (screen) | %g, %g (world)", pos.x, pos.y, v.x, v.y);
+}
 
 int main(int, char **) {
   // Setup window
   OpenGLContext contextGL;
   contextGL.init();
-  bool stepping = true;
+  bool stepping = false;
   int seed=59;
 
   srand(seed);
   ElasticModel* em = rectangularModel();
+
   ShaderContext context;
+  contextGL.view.shaderContext=&context;
+
   ElasticModelRender* emr = constructElasticModelRender(em, context);
   CoordinateGridRender cgr(context, 1.0);
+  ImFont* font = ImGui::GetFont();
+  ImDrawList* drawList = ImGui::GetOverlayDrawList();
 
   std::vector<std::pair<Eigen::ArrayXf, double>> lines;
+  auto printCollisionList = [&](const std::vector<std::array<unsigned, 3>>& list) {
+    if(list.size() == 0) {
+      ImGui::Text("No Collisions");
+      return;
+    }
+    ImGui::Text("%d Collisions", list.size());
+    for(auto& triplet: list) {
+      ImGui::Text("%d %d %d", triplet[0]/2, triplet[1]/2, triplet[2]/2);
+    }
+  };
   // em->lineSearchHook = [&](auto *s, double alpha) {
   //   unsigned N = 300;
   //   Eigen::ArrayXf values(N);
   //   Eigen::ArrayXd vOld = s->v;
   //   Eigen::ArrayXd x(s->x0);
-  //   auto alphas = Eigen::ArrayXd::LinSpaced(N, 0, 2);
+  //   auto alphas = Eigen::ArrayXd::LinSpaced(N, -2, 2);
   //   for (unsigned i = 0; i < N; i++) {
   //     x = s->x0 + alphas[i] * s->dn;
   //     s->g = 0;
@@ -89,11 +108,14 @@ int main(int, char **) {
   double t = 0;
 
   // Main loop
-  float mu = 1;//em->mu[0];
-  float lambda = 1;//em->lambda[0];
+  float mu = 80;//em->mu[0];
+  float lambda = 80;//em->lambda[0];
   float kFluid = 5;//em->kFluid;
   float kDamp = 0.05;//em->kDamp;
-  float fExt = 0.1;
+  float newtonAccuracy = 0.01;//em->kDamp;
+  float fExt = 0.04;
+  float muFriction = 1;
+  float dt = 0.1;
   do  {
     {
       ImGui::Text("Stepper interface");  // Display some text (you can use a
@@ -102,11 +124,14 @@ int main(int, char **) {
       ImGui::SliderInt("Random Seed", &seed, 0, 100);
       srand(seed);
 
-      ImGui::SliderFloat("mu", &mu, 0, 800);
+      ImGui::SliderFloat("mu", &mu, 0, 10);
       ImGui::SliderFloat("k Fluid", &kFluid, 0, 10);
-      ImGui::SliderFloat("lambda", &lambda, 0, 800);
+      ImGui::SliderFloat("lambda", &lambda, 0, 10);
       ImGui::SliderFloat("k internal damping", &kDamp, 0, 2);
       ImGui::SliderFloat("gravity", &fExt, -2, 2);
+      ImGui::SliderFloat("newton accuracy", &newtonAccuracy, 0.0001, 0.1);
+      ImGui::SliderFloat("mu Friction", &muFriction, 0.0, 20);
+      ImGui::SliderFloat("dt", &dt, 0.01, 1);
       if (em->mu[0] != mu) {
         for (auto &x : em->mu) x = mu;
       }
@@ -115,7 +140,17 @@ int main(int, char **) {
       }
       em->kFluid = kFluid;
       em->kDamp = kDamp;
-      for(int i=1; i<em->fExt.size(); i+=2) em->fExt[i] = fExt;
+      em->newtonAccuracy = newtonAccuracy;
+      em->fExt = 0;
+      em->dt = dt;
+      muSelfFriction = muFriction;
+      for(int i=0; i < 0; i++) {
+        em->setSurfaceForce(0, i, 0.1);
+      }
+      for(int i=1; i<em->fExt.size(); i+=2) 
+      {
+        em->fExt[i] += fExt;
+      }
 
       if (ImGui::Button("One step")) {
         lines.clear();
@@ -150,6 +185,7 @@ int main(int, char **) {
                          FLT_MAX, ImVec2(400, 200));
       }
       ImGui::Separator();
+      printCollisionList(em->selfCollisionList);
     }
 
 
@@ -166,7 +202,9 @@ int main(int, char **) {
     }
     cgr.draw();
     context.setViewMatrix(contextGL.view.computeViewMatrix());
+    printCursorPos(contextGL);
     emr->draw();
+    emr->drawIndices(context, contextGL);
   } while (contextGL.nextFrame());
 
   delete em;

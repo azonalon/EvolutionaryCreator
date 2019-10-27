@@ -3,6 +3,7 @@
 #include "imgui/imgui.h"
 #include <functional>
 #include <glm/gtc/matrix_transform.hpp>
+#include "shader/ShaderProgram.hpp"
 
 static constexpr bool DEBUG_UI = false;
 
@@ -10,13 +11,17 @@ class View {
 public:
     double zoom=1, aspect=1;
     double x0=0, y0=0, x1=0, y1=0, xC=0, yC=0;
+    int w, h;// window size
     bool dragging = false;
-    glm::mat4 viewMatrix;
+    ShaderContext* shaderContext=NULL;
     GLFWwindow* window;
     void setWindow(GLFWwindow* w) {
         window = w;
         installCallbacks(window);
     }
+
+    View(ShaderContext* shaderContext): shaderContext(shaderContext) {};
+    View(){};
 
     static void mouseButtonCallback(View* view, GLFWwindow* w, int button, int action, int mods)
     {
@@ -73,6 +78,8 @@ public:
     static void windowSizeCallback(View* view, GLFWwindow* win, int w, int h)
     {
         view->aspect = (double)w/(double)h;//w/h;
+        view->h = h;
+        view->w = w;
         glViewport(0, 0, w, h);
     }
 
