@@ -14,7 +14,7 @@ out vec2 rotation;
 out float v_size;
 
 void main(void) {
-  size =200 * length(uv)*view[0][0];
+  size =20*view[0][0] * (10+log(length(uv)));
   linewidth = size/10;
   antialias = 1;
   fg_color = vec4(1,1,1,1);

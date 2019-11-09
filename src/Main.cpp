@@ -41,11 +41,18 @@ ElasticModel* rectangularModel() {
       new ElasticModel(vertices, indices, k, nu, M, modelType, (double)0.3);
   em->x1 = em->x0 + 0.5;
   CollisionObject* rect = new Rectangle(200, 1);
-  rect->translate(0, -1);
+  rect->translate(0, -1.1);
   em->collisionObjects.push_back(rect);
-  for(int i=0; i<em->v.size(); i+=2)
+  // rect = new Rectangle(1, 5);
+  // rect->translate(-3, 5);
+  // em->collisionObjects.push_back(rect);
+  // rect = new Rectangle(1, 5);
+  // rect->translate(3, 5);
+  // em->collisionObjects.push_back(rect);
+  for(int i=0; i<em->v.size(); i+=1)
   {
     em->v[i] = 0;
+    em->x1[i] = em->x0[i];
   }
   em->kDamp = 0.0;
   em->dt = 0.1;
@@ -91,29 +98,28 @@ int main(int, char **) {
       ImGui::Text("%d %d %d", triplet[0]/2, triplet[1]/2, triplet[2]/2);
     }
   };
-  // em->lineSearchHook = [&](auto *s, double alpha) {
-  //   unsigned N = 300;
-  //   Eigen::ArrayXf values(N);
-  //   Eigen::ArrayXd vOld = s->v;
-  //   Eigen::ArrayXd x(s->x0);
-  //   auto alphas = Eigen::ArrayXd::LinSpaced(N, -2, 2);
-  //   for (unsigned i = 0; i < N; i++) {
-  //     x = s->x0 + alphas[i] * s->dn;
-  //     s->g = 0;
-  //     values(i) = s->computeOptimizeGradient(x, s->g);
-  //   }
-  //   lines.push_back(make_pair(values, alpha));
-  //   s->v = vOld;
-  // };
+  em->lineSearchHook = [&](auto *s, double alpha) {
+    unsigned N = 300;
+    Eigen::ArrayXf values(N);
+    Eigen::ArrayXd vOld = s->v;
+    Eigen::ArrayXd x(s->x0);
+    auto alphas = Eigen::ArrayXd::LinSpaced(N, -2, 2);
+    for (unsigned i = 0; i < N; i++) {
+      x = s->x0 + alphas[i] * s->dn;
+      s->g = 0;
+      values(i) = s->computeOptimizeGradient(x, s->g);
+    }
+    lines.push_back(make_pair(values, alpha));
+    s->v = vOld;
+  };
   double t = 0;
 
   // Main loop
-  float mu = 80;//em->mu[0];
-  float lambda = 80;//em->lambda[0];
-  float kFluid = 5;//em->kFluid;
-  float kDamp = 0.05;//em->kDamp;
+  float mu = 0.5;//em->mu[0];
+  float lambda = 0.5;//em->lambda[0];
+  float kDamp = 0.00;//em->kDamp;
   float newtonAccuracy = 0.01;//em->kDamp;
-  float fExt = 0.04;
+  float fExt = 0.07;
   float muFriction = 1;
   float dt = 0.1;
   do  {
@@ -125,12 +131,11 @@ int main(int, char **) {
       srand(seed);
 
       ImGui::SliderFloat("mu", &mu, 0, 10);
-      ImGui::SliderFloat("k Fluid", &kFluid, 0, 10);
       ImGui::SliderFloat("lambda", &lambda, 0, 10);
       ImGui::SliderFloat("k internal damping", &kDamp, 0, 2);
       ImGui::SliderFloat("gravity", &fExt, -2, 2);
       ImGui::SliderFloat("newton accuracy", &newtonAccuracy, 0.0001, 0.1);
-      ImGui::SliderFloat("mu Friction", &muFriction, 0.0, 20);
+      ImGui::SliderFloat("mu Friction", &muFriction, 0.0, 100);
       ImGui::SliderFloat("dt", &dt, 0.01, 1);
       if (em->mu[0] != mu) {
         for (auto &x : em->mu) x = mu;
@@ -138,7 +143,6 @@ int main(int, char **) {
       if (em->lambda[0] != lambda) {
         for (auto &x : em->lambda) x = lambda;
       }
-      em->kFluid = kFluid;
       em->kDamp = kDamp;
       em->newtonAccuracy = newtonAccuracy;
       em->fExt = 0;
@@ -149,11 +153,10 @@ int main(int, char **) {
       }
       for(int i=1; i<em->fExt.size(); i+=2) 
       {
-        em->fExt[i] += fExt;
+        em->fExt[i] += fExt/100.0;
       }
 
       if (ImGui::Button("One step")) {
-        lines.clear();
         em->implicitEulerStep();
         t += em->dt;
       }
@@ -189,8 +192,13 @@ int main(int, char **) {
     }
 
 
+    cgr.draw();
+    context.setViewMatrix(contextGL.view.computeViewMatrix());
+    printCursorPos(contextGL);
+    emr->draw();
+    emr->drawIndices(context, contextGL);
+
     if (stepping) {
-      lines.clear();
       try {
         // ph->update(t);
         em->implicitEulerStep();
@@ -200,11 +208,6 @@ int main(int, char **) {
         stepping = false;
       }
     }
-    cgr.draw();
-    context.setViewMatrix(contextGL.view.computeViewMatrix());
-    printCursorPos(contextGL);
-    emr->draw();
-    emr->drawIndices(context, contextGL);
   } while (contextGL.nextFrame());
 
   delete em;

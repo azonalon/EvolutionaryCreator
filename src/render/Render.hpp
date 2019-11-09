@@ -139,7 +139,7 @@ class ElasticModelRender {
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glBufferSubData(GL_ARRAY_BUFFER, 0, m->vertexCount() * sizeof(double) * 2,
-                    m->x2.data());
+                    m->x0.data());
     glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
     // vertex coordinates
     glEnableVertexAttribArray(0);
