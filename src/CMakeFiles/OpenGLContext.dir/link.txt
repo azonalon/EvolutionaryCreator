@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../lib/libOpenGLContext.a  CMakeFiles/OpenGLContext.dir/render/OpenGLContext.cpp.o
+/usr/bin/ranlib ../lib/libOpenGLContext.a

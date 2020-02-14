@@ -1,0 +1,1 @@
+/usr/bin/c++   -std=c++17  -rdynamic CMakeFiles/EvolutionaryCreator.dir/Main.cpp.o  -o ../bin/EvolutionaryCreator  ../lib/libOpenGLContext.a ../lib/libimgui.a -lglfw -lGL -lGLEW ../lib/libEvolutionary.a 

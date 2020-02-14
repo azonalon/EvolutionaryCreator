@@ -1,0 +1,62 @@
+[
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include   -std=c++17   -o CMakeFiles/imgui.dir/dependencies/imgui/imgui.cpp.o -c /home/eduard/programming/EvolutionaryCreator/dependencies/imgui/imgui.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/dependencies/imgui/imgui.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include   -std=c++17   -o CMakeFiles/imgui.dir/src/ui/ImGuiGlfw.cpp.o -c /home/eduard/programming/EvolutionaryCreator/src/ui/ImGuiGlfw.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/src/ui/ImGuiGlfw.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include   -std=c++17   -o CMakeFiles/imgui.dir/src/ui/ImGuiOpengl.cpp.o -c /home/eduard/programming/EvolutionaryCreator/src/ui/ImGuiOpengl.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/src/ui/ImGuiOpengl.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include   -std=c++17   -o CMakeFiles/imgui.dir/dependencies/imgui/imgui_draw.cpp.o -c /home/eduard/programming/EvolutionaryCreator/dependencies/imgui/imgui_draw.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/dependencies/imgui/imgui_draw.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include   -std=c++17   -o CMakeFiles/imgui.dir/dependencies/imgui/imgui_demo.cpp.o -c /home/eduard/programming/EvolutionaryCreator/dependencies/imgui/imgui_demo.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/dependencies/imgui/imgui_demo.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary   -std=c++17 -std=c++17   -o CMakeFiles/Evolutionary.dir/physics/ElasticModelCollision.cpp.o -c /home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/ElasticModelCollision.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/ElasticModelCollision.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary   -std=c++17 -std=c++17   -o CMakeFiles/Evolutionary.dir/physics/InvertibleNeoHookeanModel.cpp.o -c /home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/InvertibleNeoHookeanModel.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/InvertibleNeoHookeanModel.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary   -std=c++17 -std=c++17   -o CMakeFiles/Evolutionary.dir/physics/SurfaceForce.cpp.o -c /home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/SurfaceForce.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/SurfaceForce.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary   -std=c++17 -std=c++17   -o CMakeFiles/Evolutionary.dir/physics/InvertibleNeoHookeanStressDensity.cpp.o -c /home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/InvertibleNeoHookeanStressDensity.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/InvertibleNeoHookeanStressDensity.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary   -std=c++17 -std=c++17   -o CMakeFiles/Evolutionary.dir/physics/CollisionObjects.cpp.o -c /home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/CollisionObjects.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/src/physics/CollisionObjects.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator/src",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include   -std=c++17   -o CMakeFiles/EvolutionaryCreator.dir/Main.cpp.o -c /home/eduard/programming/EvolutionaryCreator/src/Main.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/src/Main.cpp"
+},
+{
+  "directory": "/home/eduard/programming/EvolutionaryCreator/src",
+  "command": "/usr/bin/c++   -I/home/eduard/programming/EvolutionaryCreator/src -I/home/eduard/programming/EvolutionaryCreator/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/imgui -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/dependencies -I/home/eduard/programming/EvolutionaryCreator/dependencies/Evolutionary/include   -std=c++17   -o CMakeFiles/OpenGLContext.dir/render/OpenGLContext.cpp.o -c /home/eduard/programming/EvolutionaryCreator/src/render/OpenGLContext.cpp",
+  "file": "/home/eduard/programming/EvolutionaryCreator/src/render/OpenGLContext.cpp"
+}
+]
