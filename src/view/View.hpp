@@ -4,8 +4,10 @@
 #include <functional>
 #include <glm/gtc/matrix_transform.hpp>
 #include "shader/ShaderProgram.hpp"
+#include "render/OpenGLContext.hpp"
 
 static constexpr bool DEBUG_UI = false;
+
 
 class View {
 public:
@@ -22,6 +24,7 @@ public:
 
     View(ShaderContext* shaderContext): shaderContext(shaderContext) {};
     View(){};
+
 
     static void mouseButtonCallback(View* view, GLFWwindow* w, int button, int action, int mods)
     {

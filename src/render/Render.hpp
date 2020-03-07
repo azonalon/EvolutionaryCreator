@@ -8,8 +8,12 @@
 
 class CoordinateGridRender {
  public:
-  static constexpr std::array<double, 8> coordinateData = {-1, -1, -1, 1,
-                                                           1,  1,  1, -1};
+  static constexpr std::array<double, 8> coordinateData = {-1000, -1000, -1000, 1000,
+                                                           1000,  1000,  1000, -1000};
+  static constexpr std::array<double, 8> uvData = {-1000, -1000, -1000, 1000,
+                                                           1000,  1000,  1000, -1000};
+  // static constexpr std::array<double, 8> uvData = {0, 0, 0, 1,
+  //                                                          1,  1,  1, 0};
   double scale = 1;
   double spacing = 1;
   GLuint buffer, vao;
@@ -25,6 +29,11 @@ class CoordinateGridRender {
     glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(double), &coordinateData[0],
                  GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(double), &uvData[0],
+                 GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_DOUBLE, GL_FALSE, 0, 0);
     glBindVertexArray(0);
   };
   void draw() {
@@ -41,12 +50,15 @@ class ElasticModelRender {
   ElasticModel *m;
   ShaderProgram ems;
   ShaderProgram bbs;
+  ShaderProgram ps;
   ShaderProgram fws;
   ShaderContext& context;
   const unsigned restartIndex = 65535;
   bool drawBoundingBoxes = true;
+  bool drawParticles = true;
   bool drawForceVectors = false;
-  GLuint vertexBuffer, indexBuffer, uvBuffer, vao, vaoBoundingBox, sBuffer, forceBuffer, vaoForces;
+  GLuint vertexBuffer, indexBuffer, uvBuffer, vao, vaoBoundingBox, sBuffer,
+    forceBuffer, vaoForces, vaoParticles, particleBuffer, particleLifetimeBuffer;
   ElasticModelRender(ElasticModel *m, ShaderContext &context,
                      const unsigned char *texPixels, unsigned texWidth,
                      unsigned texHeight, const double* texCoords)
@@ -57,6 +69,9 @@ class ElasticModelRender {
         bbs("resources/shaders/BoundingBox.vert",
             "resources/shaders/BoundingBox.geom",
             "resources/shaders/BoundingBox.frag", context),
+        ps("resources/shaders/Particles.vert",
+            "",
+            "resources/shaders/Particles.frag", context),
         fws("resources/shaders/Flow.vert",
             "",
             "resources/shaders/Flow.frag", context) , context(context)
@@ -66,9 +81,12 @@ class ElasticModelRender {
     glGenBuffers(1, &uvBuffer);
     glGenBuffers(1, &sBuffer);
     glGenBuffers(1, &forceBuffer);
+    glGenBuffers(1, &particleBuffer);
+    glGenBuffers(1, &particleLifetimeBuffer);
     glGenVertexArrays(1, &vao);
     glGenVertexArrays(1, &vaoForces);
     glGenVertexArrays(1, &vaoBoundingBox);
+    glGenVertexArrays(1, &vaoParticles);
 
     // LOAD TEXTURE INTO PIPELINE
     glGenTextures(1, &texture);
@@ -104,6 +122,16 @@ class ElasticModelRender {
                  GL_STATIC_DRAW);
 
     glBindVertexArray(vaoForces);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, forceBuffer);
+    glBufferData(GL_ARRAY_BUFFER, m->vertexCount() * sizeof(double) * 2,
+                 m->g.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+
+    glBindVertexArray(vaoParticles);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
@@ -191,6 +219,8 @@ class ElasticModelRender {
                       {a.x(), a.y(), b.x(), b.y(), c.x(), c.y(), b.x(), b.y(), c.x(), c.y(), d.x(), d.y()});
       }
 
+
+
       GLuint vb, tb;
       glGenBuffers(1, &vb);
       glGenBuffers(1, &tb);
@@ -202,6 +232,23 @@ class ElasticModelRender {
       glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
       glDrawArrays(GL_TRIANGLES, 0, coords.size()/2);
       glDeleteBuffers(1, &vb);
+    }
+
+    if (drawParticles) {
+      ps.enable();
+      unsigned particleCount = m->surfaceParticleIndices.size();
+      glBindVertexArray(vaoParticles);
+      glEnableVertexAttribArray(0);
+      glBindBuffer(GL_ARRAY_BUFFER, particleBuffer);
+      glBufferData(GL_ARRAY_BUFFER, particleCount * sizeof(double) * 2,
+                      &m->x0[m->n], GL_DYNAMIC_DRAW);
+      glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(1);
+      glBindBuffer(GL_ARRAY_BUFFER, particleLifetimeBuffer);
+      glBufferData(GL_ARRAY_BUFFER, particleCount * sizeof(double),
+                      m->surfaceParticleLifetime.data(), GL_DYNAMIC_DRAW);
+      glVertexAttribPointer(1, 1, GL_DOUBLE, GL_FALSE, 0, 0);
+      glDrawArrays(GL_POINTS, 0, particleCount);
     }
     glBindVertexArray(0);
   }

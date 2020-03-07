@@ -15,4 +15,13 @@ public:
     void destroy();
     OpenGLContext() {
     };
+
+    glm::vec2 cursorPosWorld() {
+        auto pos = ImGui::GetMousePos();
+        double w = view.w;
+        double h = view.h;
+        glm::vec4 v((-1+2*pos.x/w), (1-2*pos.y/h), 0, 1);
+        v = glm::inverse(view.shaderContext->viewMatrix)*v;
+        return glm::vec2(v.x, v.y);
+    }
 };
